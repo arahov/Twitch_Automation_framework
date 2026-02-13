@@ -15,6 +15,11 @@ on:
         required: false
         default: 'all'
 
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
