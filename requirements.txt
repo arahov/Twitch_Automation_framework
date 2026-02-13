@@ -1,0 +1,26 @@
+# Core Selenium and WebDriver
+selenium==4.27.1
+webdriver-manager==4.0.2
+
+# Testing Framework
+pytest==8.3.4
+pytest-html==4.1.1
+pytest-xdist==3.6.1
+pytest-rerunfailures==14.0
+pytest-timeout==2.3.1
+pytest-metadata==3.1.1
+
+# Reporting and Logging
+allure-pytest==2.13.5
+pytest-json-report==1.5.0
+
+# Utilities
+python-dotenv==1.0.1
+Pillow==11.0.0
+requests==2.32.3
+
+# Logging and Monitoring
+loguru==0.7.2
+
+# Data handling
+pyyaml==6.0.2

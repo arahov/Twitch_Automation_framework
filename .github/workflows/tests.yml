@@ -1,0 +1,174 @@
+name: Twitch Automation Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_marker:
+        description: 'Test marker to run (smoke, critical, regression, or all)'
+        required: false
+        default: 'all'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+    
+    - name: Create required directories
+      run: |
+        mkdir -p screenshots reports logs
+    
+    - name: Run tests
+      env:
+        HEADLESS: true
+        SCREENSHOT_ON_FAILURE: true
+      run: |
+        if [ "${{ github.event.inputs.test_marker }}" == "all" ] || [ -z "${{ github.event.inputs.test_marker }}" ]; then
+          pytest -v --html=reports/report.html --self-contained-html
+        else
+          pytest -v -m "${{ github.event.inputs.test_marker }}" --html=reports/report.html --self-contained-html
+        fi
+    
+    - name: Upload test report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report-python-${{ matrix.python-version }}
+        path: reports/
+        retention-days: 30
+    
+    - name: Upload screenshots
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: screenshots-python-${{ matrix.python-version }}
+        path: screenshots/
+        retention-days: 30
+    
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: logs-python-${{ matrix.python-version }}
+        path: logs/
+        retention-days: 30
+    
+    - name: Publish test results
+      if: always()
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: reports/*.xml
+        check_name: Test Results (Python ${{ matrix.python-version }})
+    
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const reportPath = 'reports/report.html';
+          
+          let comment = `## Test Results (Python ${{ matrix.python-version }})\n\n`;
+          comment += `**Status**: ${{ job.status }}\n`;
+          comment += `**Commit**: ${{ github.sha }}\n\n`;
+          comment += `View detailed report in artifacts.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install linting tools
+      run: |
+        pip install flake8 pylint black mypy
+    
+    - name: Run flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Run black check
+      run: |
+        black --check . || true
+    
+    - name: Run pylint
+      run: |
+        pylint **/*.py --exit-zero || true
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install safety
+      run: pip install safety
+    
+    - name: Check for security vulnerabilities
+      run: |
+        pip install -r requirements.txt
+        safety check || true
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security]
+    if: always()
+    steps:
+    - name: Send notification
+      run: |
+        echo "Test pipeline completed with status: ${{ needs.test.result }}"
+        # Add your notification logic here (Slack, email, etc.)
