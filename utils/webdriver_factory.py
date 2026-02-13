@@ -15,17 +15,23 @@ class WebDriverFactory:
     """Factory class to create and configure WebDriver instances"""
     
     @staticmethod
-    def create_driver() -> webdriver.Chrome:
+    def create_driver(device_name: Optional[str] = None) -> webdriver.Chrome:
         """
         Create and return configured Chrome WebDriver instance
+        
+        Args:
+            device_name: Optional device name override for parallel testing
         
         Returns:
             webdriver.Chrome: Configured Chrome WebDriver
         """
         try:
+            # Use provided device name or fall back to config default
+            selected_device = device_name if device_name else Config.DEVICE_NAME
             log.info(f"Initializing Chrome WebDriver with mobile emulation: {Config.MOBILE_EMULATION}")
+            log.info(f"Selected device: {selected_device}")
             
-            options = WebDriverFactory._get_chrome_options()
+            options = WebDriverFactory._get_chrome_options(device_name=selected_device)
             service = ChromeService(ChromeDriverManager().install())
             
             driver = webdriver.Chrome(service=service, options=options)
@@ -44,9 +50,12 @@ class WebDriverFactory:
             raise
     
     @staticmethod
-    def _get_chrome_options() -> ChromeOptions:
+    def _get_chrome_options(device_name: Optional[str] = None) -> ChromeOptions:
         """
         Configure Chrome options including mobile emulation
+        
+        Args:
+            device_name: Optional device name override for parallel testing
         
         Returns:
             ChromeOptions: Configured Chrome options
@@ -71,9 +80,17 @@ class WebDriverFactory:
         
         # Mobile emulation
         if Config.MOBILE_EMULATION:
-            mobile_emulation = Config.get_mobile_emulation_config()
+            # Use provided device name or fall back to config default
+            selected_device = device_name if device_name else Config.DEVICE_NAME
+            
+            # Get device configuration
+            device_config = Config.MOBILE_DEVICES.get(selected_device, Config.MOBILE_DEVICES['Pixel 5'])
+            mobile_emulation = {
+                'deviceMetrics': device_config['deviceMetrics'],
+                'userAgent': device_config['userAgent']
+            }
             options.add_experimental_option("mobileEmulation", mobile_emulation)
-            log.info(f"Mobile emulation enabled for device: {Config.DEVICE_NAME}")
+            log.info(f"Mobile emulation enabled for device: {selected_device}")
         
         # Headless mode
         if Config.HEADLESS:

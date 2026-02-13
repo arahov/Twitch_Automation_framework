@@ -78,6 +78,35 @@ Change device:
 DEVICE_NAME="iPhone 12" pytest
 ```
 
+## 🚀 Multi-Device Parallel Testing
+
+Run tests across multiple devices simultaneously for comprehensive cross-device validation!
+
+```bash
+# Run single test on all 4 devices in parallel
+pytest -n 4 tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
+
+# Run all tests distributed across 4 devices
+pytest -n 4
+
+# Run smoke tests on 2 devices (Pixel 5 and iPhone 12)
+pytest -n 2 -m smoke
+
+# Auto-detect worker count based on CPU cores
+pytest -n auto
+```
+
+**Device Assignment**:
+- Worker `gw0` → Pixel 5
+- Worker `gw1` → iPhone 12
+- Worker `gw2` → iPhone 14 Pro Max
+- Worker `gw3` → Samsung Galaxy S21
+
+**Benefits**:
+- ✅ Test UI/UX consistency across devices
+- ✅ Faster test execution (parallel)
+- ✅ Device-specific screenshots and logs
+
 ## 🐛 Troubleshooting
 
 **Tests taking too long?**
@@ -89,6 +118,11 @@ DEVICE_NAME="iPhone 12" pytest
 **Need more details?**
 - Enable debug logging: Set `LOG_LEVEL=DEBUG` in `.env`
 - Check logs: `cat logs/framework.log`
+
+**Parallel tests not working?**
+- Ensure `pytest-xdist` is installed: `pip install pytest-xdist`
+- Check worker logs for device-specific issues
+- Reduce worker count if system resources are limited
 
 ## 📚 Next Steps
 

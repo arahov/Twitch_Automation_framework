@@ -63,7 +63,7 @@ twitch_automation_framework/
 5. **Comprehensive Logging**: Multi-level logging with Loguru
 6. **Screenshot Capture**: Automatic screenshots on failure
 7. **Configurable Test Execution**: Via environment variables
-8. **Parallel Execution**: Support for pytest-xdist
+8. **Multi-Device Parallel Execution**: Run tests across 4 mobile devices simultaneously
 9. **Test Retry**: Automatic retry for flaky tests
 10. **HTML Reports**: Detailed test execution reports
 
@@ -156,15 +156,27 @@ EXPLICIT_WAIT=30 pytest
 MOBILE_EMULATION=false pytest
 ```
 
-### Run Tests in Parallel
+### Run Tests in Parallel (Multi-Device)
 
 ```bash
-# Run with 2 workers
+# Run single test on all 4 devices simultaneously
+pytest -n 4 tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
+
+# Run all tests distributed across 4 devices
+pytest -n 4
+
+# Run with 2 workers (Pixel 5 and iPhone 12)
 pytest -n 2
 
-# Run with auto-detect workers
+# Auto-detect worker count based on CPU cores
 pytest -n auto
 ```
+
+**Device Assignment**:
+- Worker `gw0` → Pixel 5
+- Worker `gw1` → iPhone 12
+- Worker `gw2` → iPhone 14 Pro Max
+- Worker `gw3` → Samsung Galaxy S21
 
 ### Generate HTML Report
 

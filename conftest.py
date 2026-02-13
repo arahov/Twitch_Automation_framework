@@ -10,27 +10,70 @@ from config.config import Config
 from datetime import datetime
 import os
 
+# Device mapping for parallel execution with pytest-xdist
+DEVICE_MAPPING = {
+    'gw0': 'Pixel 5',
+    'gw1': 'iPhone 12',
+    'gw2': 'iPhone 14 Pro Max',
+    'gw3': 'Samsung Galaxy S21'
+}
+
+
+def get_device_for_worker(worker_id: str) -> str:
+    """
+    Get device name for a specific worker
+    
+    Args:
+        worker_id: Worker ID (e.g., 'gw0', 'gw1', 'master')
+        
+    Returns:
+        str: Device name for the worker
+    """
+    # If running without xdist (master), use default device
+    if worker_id == 'master':
+        return Config.DEVICE_NAME
+    
+    # For workers beyond gw3, cycle through devices
+    if worker_id in DEVICE_MAPPING:
+        return DEVICE_MAPPING[worker_id]
+    else:
+        # Extract worker number and cycle through devices
+        try:
+            worker_num = int(worker_id.replace('gw', ''))
+            devices = list(DEVICE_MAPPING.values())
+            return devices[worker_num % len(devices)]
+        except:
+            return Config.DEVICE_NAME
+
 
 @pytest.fixture(scope="function")
-def driver() -> WebDriver:
+def driver(request) -> WebDriver:
     """
     Fixture to provide WebDriver instance for tests
+    Supports parallel execution with device-specific configuration
     
+    Args:
+        request: pytest request object
+        
     Yields:
         WebDriver: Configured WebDriver instance
     """
+    # Get worker ID for parallel execution
+    worker_id = getattr(request.config, 'workerinput', {}).get('workerid', 'master')
+    device_name = get_device_for_worker(worker_id)
+    
     log.info("=" * 80)
-    log.info("Setting up WebDriver for test")
+    log.info(f"[{worker_id}][{device_name}] Setting up WebDriver for test")
     log.info("=" * 80)
     
     driver_instance = None
     try:
-        driver_instance = WebDriverFactory.create_driver()
+        driver_instance = WebDriverFactory.create_driver(device_name=device_name)
         yield driver_instance
     finally:
         if driver_instance:
             log.info("=" * 80)
-            log.info("Tearing down WebDriver")
+            log.info(f"[{worker_id}][{device_name}] Tearing down WebDriver")
             log.info("=" * 80)
             WebDriverFactory.quit_driver(driver_instance)
 
@@ -38,20 +81,23 @@ def driver() -> WebDriver:
 @pytest.fixture(scope="function", autouse=True)
 def test_logger(request):
     """
-    Fixture to log test start and end
+    Fixture to log test start and end with worker and device info
     
     Args:
         request: pytest request object
     """
     test_name = request.node.name
+    worker_id = getattr(request.config, 'workerinput', {}).get('workerid', 'master')
+    device_name = get_device_for_worker(worker_id)
+    
     log.info("=" * 80)
-    log.info(f"STARTING TEST: {test_name}")
+    log.info(f"[{worker_id}][{device_name}] STARTING TEST: {test_name}")
     log.info("=" * 80)
     
     yield
     
     log.info("=" * 80)
-    log.info(f"FINISHED TEST: {test_name}")
+    log.info(f"[{worker_id}][{device_name}] FINISHED TEST: {test_name}")
     log.info("=" * 80)
 
 
@@ -74,13 +120,18 @@ def pytest_runtest_makereport(item, call):
             if "driver" in item.funcargs:
                 driver = item.funcargs["driver"]
                 try:
+                    # Get worker info for unique screenshot naming
+                    worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
+                    device_name = get_device_for_worker(worker_id)
+                    device_suffix = device_name.replace(" ", "")
+                    
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     test_name = item.name.replace(" ", "_")
-                    screenshot_name = f"FAILED_{test_name}_{timestamp}.png"
+                    screenshot_name = f"FAILED_{test_name}_{timestamp}_{worker_id}_{device_suffix}.png"
                     screenshot_path = Config.SCREENSHOT_DIR / screenshot_name
                     
                     driver.save_screenshot(str(screenshot_path))
-                    log.error(f"Test failed! Screenshot saved: {screenshot_path}")
+                    log.error(f"[{worker_id}][{device_name}] Test failed! Screenshot saved: {screenshot_path}")
                     
                     # Attach to pytest-html report if available
                     if hasattr(report, 'extra'):
