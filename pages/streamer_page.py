@@ -15,6 +15,7 @@ class StreamerPage(BasePage):
     """Page object for Twitch streamer page"""
     
     # Locators
+    STREAMER_VIDEO = (By.XPATH, "//div[@data-a-target='video-player']")
     CHAT_WELCOME = (By.XPATH, "//div[@data-a-target='chat-welcome-message']")
     
     # Modal/Popup locators
@@ -102,13 +103,18 @@ class StreamerPage(BasePage):
             # Wait for page to be fully loaded
             self.wait_for_page_load(timeout=15)
             
-            # Wait for chat welcome message to be present
-            log.debug("Waiting for chat welcome message element")
+            # Wait for video player to be present (primary check)
+            log.debug("Waiting for video player element")
             try:
-                self.find_element(self.CHAT_WELCOME, timeout=15)
-                log.info("Chat welcome message element found")
+                self.find_element(self.STREAMER_VIDEO, timeout=15)
+                log.info("Video player element found")
             except TimeoutException:
-                log.warning("Chat welcome message not found, but continuing")
+                log.warning("Video player not found, checking for chat welcome message as fallback")
+                try:
+                    self.find_element(self.CHAT_WELCOME, timeout=10)
+                    log.info("Chat welcome message element found (fallback)")
+                except TimeoutException:
+                    log.warning("Neither video player nor chat welcome message found, but continuing")
             
             # Additional wait for video to initialize
             time.sleep(3)
@@ -127,6 +133,37 @@ class StreamerPage(BasePage):
         except Exception as e:
             log.error(f"Error during page load wait: {str(e)}")
             # Don't raise - we'll try to take screenshot anyway
+    
+    def is_video_player_loaded(self) -> bool:
+        """
+        Check if video player is loaded and visible
+        
+        Returns:
+            bool: True if video player is loaded, False otherwise
+        """
+        log.debug("Checking if video player is loaded")
+        try:
+            # Check for video player element (primary)
+            video_present = self.is_element_visible(self.STREAMER_VIDEO, timeout=5)
+            
+            if video_present:
+                log.info("Video player is loaded and visible")
+                return True
+            
+            # Fallback to chat welcome message
+            log.debug("Video player not found, checking chat welcome message as fallback")
+            chat_present = self.is_element_visible(self.CHAT_WELCOME, timeout=5)
+            
+            if chat_present:
+                log.info("Chat welcome message is loaded and visible (fallback)")
+                return True
+            else:
+                log.warning("Neither video player nor chat welcome message visible")
+                return False
+                
+        except Exception as e:
+            log.error(f"Error checking video player/chat status: {str(e)}")
+            return False
     
     def is_chat_welcome_loaded(self) -> bool:
         """
@@ -204,9 +241,9 @@ class StreamerPage(BasePage):
             filename = f"streamer_{streamer_name}_{timestamp}.png"
         
         try:
-            # Ensure chat welcome message is visible before screenshot
-            if not self.is_chat_welcome_loaded():
-                log.warning("Chat welcome message may not be fully loaded, taking screenshot anyway")
+            # Ensure video player is visible before screenshot
+            if not self.is_video_player_loaded():
+                log.warning("Video player may not be fully loaded, taking screenshot anyway")
             
             screenshot_path = self.take_screenshot(filename)
             log.info(f"Screenshot captured successfully: {screenshot_path}")
@@ -232,11 +269,12 @@ class StreamerPage(BasePage):
                 log.error("URL does not appear to be a valid streamer page")
                 return False
             
-            # Check for key page elements
-            page_elements_present = self.is_element_present(self.CHAT_WELCOME)
+            # Check for key page elements (video player or chat welcome)
+            video_present = self.is_element_present(self.STREAMER_VIDEO)
+            chat_present = self.is_element_present(self.CHAT_WELCOME)
             
-            if not page_elements_present:
-                log.error("Key page elements not found")
+            if not video_present and not chat_present:
+                log.error("Key page elements not found (neither video player nor chat welcome)")
                 return False
             
             log.info("Streamer page verification successful")
