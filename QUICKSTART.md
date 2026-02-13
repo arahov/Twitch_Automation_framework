@@ -33,7 +33,35 @@ After running tests:
 
 - **Screenshots**: Check `screenshots/` folder
 - **Logs**: Check `logs/framework.log`
-- **Reports**: Check `reports/report.html`
+- **HTML Report**: Check `reports/report.html`
+- **Allure Report**: Run `allure serve reports/allure-results` (better for parallel tests)
+
+### 📊 Viewing Allure Reports (Recommended for Parallel Tests)
+
+**One-time setup** (if Allure not installed):
+```bash
+# Install Scoop package manager
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+
+# Install Java and Allure
+scoop bucket add java
+scoop install openjdk allure
+```
+
+```bash
+# Generate and open interactive Allure report
+allure serve reports/allure-results
+
+# Or generate static report
+allure generate reports/allure-results -o reports/allure-report --clean
+```
+
+**Why Allure for Parallel Tests?**
+- ✅ Better worker information display
+- ✅ Timeline view shows parallel execution
+- ✅ Device-specific test grouping
+- ✅ Interactive and detailed
 
 ## 🎯 Run Specific Tests
 
@@ -84,7 +112,7 @@ Run tests across multiple devices simultaneously for comprehensive cross-device 
 
 ```bash
 # Run single test on all 4 devices in parallel
-pytest -n 4 tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
+pytest -n 4 --dist=each tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
 
 # Run all tests distributed across 4 devices
 pytest -n 4

@@ -3,6 +3,7 @@ Pytest Configuration and Fixtures
 Central configuration for pytest with reusable fixtures
 """
 import pytest
+import allure
 from selenium.webdriver.remote.webdriver import WebDriver
 from utils.webdriver_factory import WebDriverFactory
 from utils.logger import log
@@ -49,33 +50,32 @@ def get_device_for_worker(worker_id: str) -> str:
 @pytest.fixture(scope="function")
 def driver(request) -> WebDriver:
     """
-    Fixture to provide WebDriver instance for tests
-    Supports parallel execution with device-specific configuration
+    WebDriver fixture with automatic setup and teardown
+    Provides a configured WebDriver instance for each test
     
     Args:
-        request: pytest request object
+        request: Pytest request object for accessing worker info
         
     Yields:
-        WebDriver: Configured WebDriver instance
+        WebDriver: Configured Selenium WebDriver instance
     """
-    # Get worker ID for parallel execution
+    # Get worker ID and assign device
     worker_id = getattr(request.config, 'workerinput', {}).get('workerid', 'master')
     device_name = get_device_for_worker(worker_id)
     
-    log.info("=" * 80)
-    log.info(f"[{worker_id}][{device_name}] Setting up WebDriver for test")
-    log.info("=" * 80)
+    # Add device info to Allure report
+    allure.dynamic.parameter("Worker", worker_id)
+    allure.dynamic.parameter("Device", device_name)
+    allure.dynamic.label("device", device_name)
+    allure.dynamic.label("worker", worker_id)
     
-    driver_instance = None
-    try:
-        driver_instance = WebDriverFactory.create_driver(device_name=device_name)
-        yield driver_instance
-    finally:
-        if driver_instance:
-            log.info("=" * 80)
-            log.info(f"[{worker_id}][{device_name}] Tearing down WebDriver")
-            log.info("=" * 80)
-            WebDriverFactory.quit_driver(driver_instance)
+    log.info(f"[{worker_id}][{device_name}] Setting up WebDriver for test")
+    driver_instance = WebDriverFactory.create_driver(device_name=device_name)
+    
+    yield driver_instance
+    
+    log.info(f"[{worker_id}][{device_name}] Tearing down WebDriver")
+    driver_instance.quit()
 
 
 @pytest.fixture(scope="function", autouse=True)

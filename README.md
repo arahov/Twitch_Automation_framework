@@ -131,7 +131,7 @@ pytest
 ### Run Specific Test
 
 ```bash
-# Run by test name
+# Run by test name (assignment requirement)
 pytest tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
 
 # Run by marker
@@ -160,7 +160,7 @@ MOBILE_EMULATION=false pytest
 
 ```bash
 # Run single test on all 4 devices simultaneously
-pytest -n 4 tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
+pytest -n 4 --dist=each tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
 
 # Run all tests distributed across 4 devices
 pytest -n 4

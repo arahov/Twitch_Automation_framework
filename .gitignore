@@ -123,9 +123,9 @@ dmypy.json
 *~
 
 # Framework specific
-logs/*.log
-reports/*.html
-screenshots/*.png
+logs/*
+reports/*
+screenshots/*
 *.pyc
 .DS_Store
 
