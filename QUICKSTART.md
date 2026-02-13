@@ -44,7 +44,7 @@ pytest -m smoke
 # Run only critical tests
 pytest -m critical
 
-# Run a specific test
+# Run a specific test ( USE THIS TO TEST THE OROGINAL ASSIGNMENT)
 pytest tests/test_twitch_search.py::TestTwitchSearch::test_search_and_navigate_to_streamer
 
 # Run in headless mode (no browser window)
