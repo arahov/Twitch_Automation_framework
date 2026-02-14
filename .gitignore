@@ -134,6 +134,7 @@ screenshots/*
 !reports/.gitkeep
 !screenshots/.gitkeep
 !screenshots/automation_test_labeled.gif
+!screenshots/automation_twitch.gif
 
 # ChromeDriver
 chromedriver
