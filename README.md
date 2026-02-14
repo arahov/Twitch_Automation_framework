@@ -1,6 +1,6 @@
 # Twitch Automation Framework
 
-![Automation Test Demonstration](screenshots/automation_twitch.gif)
+<img src="screenshots/automation_twitch.gif" alt="Automation Test Demonstration" width="600">
 
 A robust, scalable Selenium automation framework built with Python and Pytest for testing Twitch mobile web application.
 
