@@ -1,4 +1,5 @@
 # Twitch Automation Framework
+**Created by Senior QA Engineer Ara Housepian**
 
 <img src="screenshots/automation_twitch.gif" alt="Automation Test Demonstration" width="600">
 
