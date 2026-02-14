@@ -48,8 +48,9 @@ class TestTwitchSearch:
             
             # Step 2: Click the BROWSE button
             log.info("Step 2: Click the BROWSE button")
-            home_page.click_browse_button()
-            time.sleep(2)
+            # home_page.click_browse_button()
+            # time.sleep(2)
+            home_page.click_browse_button() # time.sleep(2) call removed
             log.info("✓ BROWSE button clicked, directory page loaded")
             
             # Initialize search results page (directory page)
@@ -57,8 +58,9 @@ class TestTwitchSearch:
             
             # Step 3: Enter search query in directory page
             log.info(f"Step 3: Enter search query '{search_query}' in directory page")
-            search_page.enter_search_query(search_query)
-            time.sleep(2)
+            # search_page.enter_search_query(search_query)
+            # time.sleep(2)
+            search_page.enter_search_query(search_query) # time.sleep(2) call removed
             log.info("✓ Search query entered")
             
             # Step 4: Scroll down 2 times
@@ -121,8 +123,9 @@ class TestTwitchSearch:
         log.info("✓ Validated: On Twitch website")
         
         # Step 2: Click BROWSE button
-        home_page.click_browse_button()
-        time.sleep(2)
+        # home_page.click_browse_button()
+        # time.sleep(2)
+        home_page.click_browse_button() # time.sleep(2) call removed
         
         # Initialize search results page (directory page)
         search_page = SearchResultsPage(driver)
@@ -135,8 +138,9 @@ class TestTwitchSearch:
         
         # Step 3: Enter search query in directory page
         search_query = "StarCraft II"
-        search_page.enter_search_query(search_query)
-        time.sleep(2)
+        # search_page.enter_search_query(search_query)
+        # time.sleep(2)
+        search_page.enter_search_query(search_query) # time.sleep(2) call removed
         log.info(f"✓ Entered search query: {search_query}")
         
         # Validation: Wait for search results to load
@@ -144,8 +148,9 @@ class TestTwitchSearch:
         log.info("✓ Validated: Search results loaded")
         
         # Step 5: Scroll and load more results
-        search_page.scroll_down_times(times=2)
-        time.sleep(2)
+        # search_page.scroll_down_times(times=2)
+        # time.sleep(2)
+        search_page.scroll_down_times(times=2) # time.sleep(2) call removed
         log.info("✓ Validated: Scrolling completed")
         
         # Step 6: Select a streamer
@@ -197,8 +202,9 @@ class TestTwitchSearchRobustness:
         
         search_page = SearchResultsPage(driver)
         # This should handle no results or errors gracefully
-        search_page.enter_search_query("ThisIsAVeryUnlikelySearchQueryWithNoResults12345")
-        time.sleep(2)
+        # search_page.enter_search_query("ThisIsAVeryUnlikelySearchQueryWithNoResults12345")
+        # time.sleep(2)
+        search_page.enter_search_query("ThisIsAVeryUnlikelySearchQueryWithNoResults12345") # time.sleep(2) call removed
         
         # Test passes if we got here without crashing
         log.info("Search completed without crashing")

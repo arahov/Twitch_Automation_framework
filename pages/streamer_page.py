@@ -45,7 +45,7 @@ class StreamerPage(BasePage):
         log.info("Checking for modals and popups")
         
         # Wait a moment for any modals to appear
-        time.sleep(2)
+        # time.sleep(2) (time.sleep(2) call removed)
         
         # Check for mature content modal
         try:
@@ -53,7 +53,7 @@ class StreamerPage(BasePage):
                 log.info("Mature content modal detected")
                 self.click(self.MATURE_CONTENT_MODAL)
                 log.info("Mature content modal handled")
-                time.sleep(2)
+                # time.sleep(2) (time.sleep(2) call removed)
         except Exception as e:
             log.debug(f"No mature content modal found: {str(e)}")
         

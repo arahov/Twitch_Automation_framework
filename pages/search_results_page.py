@@ -44,7 +44,7 @@ class SearchResultsPage(BasePage):
             self.driver.find_element(*self.SEARCH_INPUT).send_keys(Keys.ENTER)
             log.info("Pressed Enter to submit search")
             
-            time.sleep(2)  # Wait for search results to appear
+            # time.sleep(2)  # Wait for search results to appear (time.sleep(2) call removed)
         except Exception as e:
             log.error(f"Failed to enter search query: {str(e)}")
             raise
@@ -64,7 +64,7 @@ class SearchResultsPage(BasePage):
             
             # Wait for results container
             self.find_element(self.SEARCH_RESULTS_CONTAINER, timeout)
-            time.sleep(2)  # Additional wait for dynamic content
+            # time.sleep(2)  # Additional wait for dynamic content (time.sleep(2) call removed)
             log.info("Search results loaded successfully")
         except Exception as e:
             log.warning(f"Could not verify results loading, proceeding anyway: {str(e)}")
@@ -118,7 +118,7 @@ class SearchResultsPage(BasePage):
             time.sleep(0.5)
             selected_element.click()
             log.info("Clicked streamer element")
-            time.sleep(2)  # Wait for navigation
+            # time.sleep(2)  # Wait for navigation (time.sleep(2) call removed)
             
             return True
         except Exception as e:
